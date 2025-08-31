@@ -10,8 +10,3 @@ export const priority = {
   medium: { name: "Medium", color: "yellow" },
   low: { name: "Low", color: "green" },
 } satisfies Record<string, Priority>;
-
-// export const status: Record<string, Status> = {
-//   completed: { name: "Completed", color: "green" },
-//   notStarted: { name: "Not Started", color: "red" },
-// };

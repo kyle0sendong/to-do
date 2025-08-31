@@ -1,12 +1,24 @@
 "use client";
 
-import * as React from "react";
+import { useState } from "react";
 import {
   flexRender,
   getCoreRowModel,
   useReactTable,
   getPaginationRowModel,
 } from "@tanstack/react-table";
+
+// Icons
+import { ListCheck, Plus } from "lucide-react";
+
+// Redux
+import { useSelector, useDispatch } from "react-redux";
+import { todoStates, addTodo } from "@/redux/todosSlice";
+
+// Components
+import { Columns } from "./columns";
+import { Button } from "@/components/shadcn/button";
+
 import {
   Table,
   TableBody,
@@ -15,61 +27,85 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/shadcn/table";
-import { columns } from "./columns";
-import { Todo } from "@/types/todo";
-import { Button } from "@/components/shadcn/button";
-type Props = {
-  data: Todo[];
-};
 
-export function TodoTable({ data }: Props) {
+export function TodoTable() {
+  const dispatch = useDispatch();
+  const todos = useSelector(todoStates);
+  
   const table = useReactTable({
-    data,
-    columns,
+    data: todos.items,
+    columns: Columns(),
     getCoreRowModel: getCoreRowModel(),
     getPaginationRowModel: getPaginationRowModel(),
   });
 
-
   const renderEmptyRows = (
     <TableRow>
-      <TableCell colSpan={columns.length} className="h-24 text-center">
+      <TableCell colSpan={Columns.length} className="h-24 text-center">
         No todos found.
       </TableCell>
     </TableRow>
-  )
+  );
+
   return (
-    <div
-      className="w-full border"
-    >
-      <Table>
-        <TableHeader>
-          {table.getHeaderGroups().map((headerGroup) => (
-            <TableRow key={headerGroup.id}>
-              {headerGroup.headers.map((header) => (
-                <TableHead key={header.id}>
-                  {header.isPlaceholder ? null : flexRender(header.column.columnDef.header, header.getContext())}
-                </TableHead>
-              ))}
-            </TableRow>
-          ))}
-        </TableHeader>
+    <div className="w-full flex flex-col px-20 py-10">
+      <div className="flex mb-4 gap-2 items-center">
+        <ListCheck size={24} strokeWidth={3} />
+        <h1 className="text-2xl font-bold">Todo List</h1>
+      </div>
 
-        <TableBody>
-          {table.getRowModel().rows?.length ? (
-            table.getRowModel().rows.map((row) => (
-              <TableRow key={row.id} data-state={row.getIsSelected() && "selected"}>
-                {row.getVisibleCells().map((cell) => (
-                  <TableCell key={cell.id}>
-                    {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                  </TableCell>
+      <div className="flex mb-3 pb-3 gap-4 border-b border-b-gray-200">
+        <Button>All Tasks</Button>
+        <Button>By Status</Button>
+      </div>
+
+      <div>
+        <Table className="mb-2 border-b border-b-gray-200">
+          <TableHeader>
+            {table.getHeaderGroups().map((headerGroup) => (
+              <TableRow key={headerGroup.id}>
+                {headerGroup.headers.map((header) => (
+                  <TableHead key={header.id}>
+                    {header.isPlaceholder
+                      ? null
+                      : flexRender(
+                          header.column.columnDef.header,
+                          header.getContext()
+                        )}
+                  </TableHead>
                 ))}
-
               </TableRow>
-            ))
-          ) : renderEmptyRows }
-        </TableBody>
-      </Table>
+            ))}
+          </TableHeader>
+
+          <TableBody>
+            {table.getRowModel().rows?.length
+              ? table.getRowModel().rows.map((row) => (
+                  <TableRow
+                    key={row.id}
+                    className="border-b"
+                    data-state={row.getIsSelected() && "selected"}
+                  >
+                    {row.getVisibleCells().map((cell) => (
+                      <TableCell key={cell.id}>
+                        {flexRender(
+                          cell.column.columnDef.cell,
+                          cell.getContext()
+                        )}
+                      </TableCell>
+                    ))}
+                  </TableRow>
+                ))
+              : renderEmptyRows}
+          </TableBody>
+        </Table>
+      </div>
+
+      <div className="ml-1">
+        <Button variant="ghost" size="sm" onClick={() => dispatch(addTodo())}>
+          <Plus size={18} strokeWidth={2} color="gray" /> Add Item
+        </Button>
+      </div>
 
       {/* Pagination */}
       <div className="flex items-center justify-end space-x-2 py-4">
@@ -89,5 +125,5 @@ export function TodoTable({ data }: Props) {
         </Button>
       </div>
     </div>
-  )
+  );
 }

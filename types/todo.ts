@@ -12,8 +12,8 @@ export type Todo = {
   id: string;
   title: string;
   status: Status;
-  priority: Priority;
-  createdAt: Date;
-  dueDate: Date;
-  notes: string;
+  priority?: Priority;
+  createdAt: string;
+  dueDate?: string;
+  notes?: string;
 }
