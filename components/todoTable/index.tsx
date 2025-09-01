@@ -14,7 +14,7 @@ import { ListCheck, Plus, Search, Trash2, Funnel, X } from "lucide-react";
 
 // Redux
 import { useSelector, useDispatch } from "react-redux";
-import { todoStates, addTodo } from "@/redux/todosSlice";
+import { todoStates, addTodo, deleteTodos } from "@/redux/todosSlice";
 
 // Components
 import { Columns } from "./columns";
@@ -49,6 +49,13 @@ export function TodoTable() {
     </TableRow>
   );
 
+  const handleDelete = () => {
+    const selectedIds = table
+      .getSelectedRowModel()
+      .rows.map((row) => row.original.id);
+    dispatch(deleteTodos(selectedIds));
+  };
+
   return (
     <div className="w-full flex flex-col px-20 py-10">
       <div className="flex mb-4 gap-2 items-center">
@@ -60,7 +67,7 @@ export function TodoTable() {
         <div className="flex">
           <Button variant="ghost">All Tasks</Button>
           <Button variant="ghost">By Status</Button>
-          <Button variant="ghost">
+          <Button variant="ghost" onClick={handleDelete}>
             <Trash2 />
           </Button>
         </div>
@@ -133,6 +140,11 @@ export function TodoTable() {
                       <TableCell
                         key={cell.id}
                         className="py-1.5 border-b border-r"
+                        style={{
+                          width: cell.column.getSize(),
+                          minWidth: cell.column.columnDef.minSize,
+                          maxWidth: cell.column.columnDef.maxSize,
+                        }}
                       >
                         {flexRender(
                           cell.column.columnDef.cell,

@@ -25,7 +25,7 @@ const initialState: TodosState = {
       priority: priority.high,
       createdAt: new Date("8/12/2025").toISOString(),
       dueDate: new Date("8/14/2025").toISOString(),
-      notes: "",
+      notes: "Finish the setup immediately",
     },
     {
       id: createId(),
@@ -60,15 +60,23 @@ const todoSlice = createSlice({
     },
     updateTodo: (
       state,
-      action: PayloadAction<{ id: string; title: string }>
+      action: PayloadAction<{
+        id: string;
+        changes: Partial<Omit<Todo, "id" | "createdAt">>;
+      }>
     ) => {
       const todo = state.items.find((t) => t.id === action.payload.id);
-      if (todo) todo.title = action.payload.title;
+      if (todo) Object.assign(todo, action.payload.changes);
     },
-    deleteTodo: (state, action: PayloadAction<string>) => {
-      state.items = state.items.filter((t) => t.id !== action.payload);
+    deleteTodos: (state, action: PayloadAction<string[]>) => {
+      state.items = state.items.filter((t) => !action.payload.includes(t.id));
     },
+    // toggleTodo: (state, action: PayloadAction<string>) => {
+    //   const todo = state.items.find((t) => t.id === action.payload);
+    //   if (todo) todo.completed = !todo.completed;
+    // },
 
+    // Inline Editing
     startEditing: (
       state,
       action: PayloadAction<{ rowId: string; columnId: string }>
@@ -104,7 +112,8 @@ export const todoStates = (state: RootState) => state.todos;
 export const {
   addTodo,
   updateTodo,
-  deleteTodo,
+  // toggleTodo,
+  deleteTodos,
   startEditing,
   stopEditing,
   setFilter,

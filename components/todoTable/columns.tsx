@@ -1,5 +1,4 @@
 import { ColumnDef } from "@tanstack/react-table";
-import { useState } from "react";
 import { cn } from "@/lib/utils";
 import {
   CaseSensitive,
@@ -11,7 +10,12 @@ import {
 
 // Redux
 import { useSelector, useDispatch } from "react-redux";
-import { startEditing, stopEditing, todoStates } from "@/redux/todosSlice";
+import {
+  startEditing,
+  stopEditing,
+  todoStates,
+  updateTodo,
+} from "@/redux/todosSlice";
 
 // Components
 import { Checkbox } from "@/components/shadcn/checkbox";
@@ -44,14 +48,12 @@ export function Columns(): ColumnDef<Todo>[] {
         <Checkbox
           checked={table.getIsAllPageRowsSelected()}
           onCheckedChange={(value) => table.toggleAllPageRowsSelected(!!value)}
-          area-label="Select all"
         />
       ),
       cell: ({ row }) => (
         <Checkbox
           checked={row.getIsSelected()}
           onCheckedChange={(value) => row.toggleSelected(!!value)}
-          aria-label="Select row"
         />
       ),
       enableSorting: false,
@@ -74,9 +76,15 @@ export function Columns(): ColumnDef<Todo>[] {
         if (isEditing) {
           return (
             <input
-              className="w-full"
+              className="w-full pl-2"
               defaultValue={row.original.title}
               onBlur={(e) => {
+                dispatch(
+                  updateTodo({
+                    id: row.original.id,
+                    changes: { title: e.target.value },
+                  })
+                );
                 dispatch(stopEditing());
               }}
               autoFocus
@@ -106,6 +114,7 @@ export function Columns(): ColumnDef<Todo>[] {
     {
       accessorKey: "status",
       size: 100,
+      maxSize: 100,
       header: () => (
         <div className="flex gap-1 items-center">
           <ChartNoAxesColumn className="rotate-270" strokeWidth={3.5} />
@@ -119,8 +128,20 @@ export function Columns(): ColumnDef<Todo>[] {
           <DropdownMenu>
             <DropdownMenuTrigger>{status.name}</DropdownMenuTrigger>
             <DropdownMenuContent className="text-white !p-2">
-              {Object.values(statusItems).map((s) => (
-                <DropdownMenuItem key={s.name}>{s.name}</DropdownMenuItem>
+              {Object.values(statusItems).map((status) => (
+                <DropdownMenuItem
+                  key={status.name}
+                  onClick={() => {
+                    dispatch(
+                      updateTodo({
+                        id: row.original.id,
+                        changes: { status: status },
+                      })
+                    );
+                  }}
+                >
+                  {status.name}
+                </DropdownMenuItem>
               ))}
             </DropdownMenuContent>
           </DropdownMenu>
@@ -129,6 +150,8 @@ export function Columns(): ColumnDef<Todo>[] {
     },
     {
       accessorKey: "priority",
+      size: 100,
+      maxSize: 100,
       header: () => (
         <div className="flex gap-1 items-center">
           <ChevronsUp size={24} strokeWidth={3} />
@@ -143,8 +166,20 @@ export function Columns(): ColumnDef<Todo>[] {
               {priority?.name ?? "\u00A0"}
             </DropdownMenuTrigger>
             <DropdownMenuContent className="text-white !p-2">
-              {Object.values(priorityItems).map((s) => (
-                <DropdownMenuItem key={s.name}>{s.name}</DropdownMenuItem>
+              {Object.values(priorityItems).map((priority) => (
+                <DropdownMenuItem
+                  key={priority.name}
+                  onClick={() => {
+                    dispatch(
+                      updateTodo({
+                        id: row.original.id,
+                        changes: { priority: priority },
+                      })
+                    );
+                  }}
+                >
+                  {priority.name}
+                </DropdownMenuItem>
               ))}
             </DropdownMenuContent>
           </DropdownMenu>
@@ -153,6 +188,8 @@ export function Columns(): ColumnDef<Todo>[] {
     },
     {
       accessorKey: "dueDate",
+      size: 100,
+      maxSize: 100,
       header: () => (
         <div className="flex gap-1 items-center">
           <CalendarIcon size={20} strokeWidth={3} />
@@ -192,6 +229,12 @@ export function Columns(): ColumnDef<Todo>[] {
                 selected={new Date(row.getValue("dueDate"))}
                 onSelect={(item) => {
                   if (item) {
+                    dispatch(
+                      updateTodo({
+                        id: row.original.id,
+                        changes: { dueDate: item.toLocaleDateString() },
+                      })
+                    );
                     dispatch(stopEditing());
                   }
                 }}
@@ -203,6 +246,8 @@ export function Columns(): ColumnDef<Todo>[] {
     },
     {
       accessorKey: "createdAt",
+      size: 100,
+      maxSize: 100,
       header: () => (
         <div className="flex gap-1 items-center">
           <CalendarIcon size={20} strokeWidth={3} />
@@ -216,13 +261,17 @@ export function Columns(): ColumnDef<Todo>[] {
     },
     {
       accessorKey: "notes",
+      size: 200,
+      maxSize: 200,
       header: () => (
         <div className="flex gap-1 items-center">
           <Music2 size={20} strokeWidth={3.5} />
-          Notes
+          Description
         </div>
       ),
       cell: ({ row, column }) => {
+        let textareaRef: HTMLTextAreaElement | null = null;
+
         const isEditing =
           todos.editingCell?.rowId === row.original.id &&
           todos.editingCell?.columnId === column.id;
@@ -236,20 +285,33 @@ export function Columns(): ColumnDef<Todo>[] {
                   startEditing({ rowId: row.original.id, columnId: column.id })
                 );
               } else {
+                // Save the value when closing
+                if (textareaRef?.value !== undefined) {
+                  dispatch(
+                    updateTodo({
+                      id: row.original.id,
+                      changes: { notes: textareaRef.value },
+                    })
+                  );
+                }
                 dispatch(stopEditing());
               }
             }}
           >
-            <DropdownMenuTrigger className="w-full h-full text-left border m-0 p-0">
+            <DropdownMenuTrigger className="m-0 p-0 w-full truncate overflow-hidden whitespace-nowrap text-ellipsis text-left">
               {row.getValue("notes") || "\u00A0"}
             </DropdownMenuTrigger>
+
             <DropdownMenuContent className="p-0 m-0 border-0 bg-white">
               <Textarea
-                className="rounded-lg border min-w-[200px]"
-                placeholder="Enter your notes here"
-                onBlur={() => {
-                  dispatch(stopEditing());
+                ref={(el) => {
+                  textareaRef = el;
                 }}
+                id={`dropdown-notes-${row.original.id}`}
+                autoFocus
+                className="rounded-lg w-[300px]"
+                defaultValue={row.getValue("notes") || ""}
+                placeholder="Enter your notes here"
               />
             </DropdownMenuContent>
           </DropdownMenu>
