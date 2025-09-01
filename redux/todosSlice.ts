@@ -8,40 +8,12 @@ interface TodosState {
   items: Todo[];
   editingCell: { rowId: string; columnId: string } | null;
   selectedIds: string[];
-  filter: "all" | "completed" | "active";
-  sort: { key: keyof Todo; direction: "asc" | "desc" } | null;
-  pagination: {
-    page: number;
-    pageSize: number;
-  };
 }
 
 const initialState: TodosState = {
-  items: [
-    {
-      id: createId(),
-      title: "Finish setup",
-      status: status.completed,
-      priority: priority.high,
-      createdAt: new Date("8/31/2025").toISOString(),
-      dueDate: new Date("9/1/2025").toISOString(),
-      notes: "Finish the setup immediately",
-    },
-    {
-      id: createId(),
-      title: "Add persistence",
-      status: status.notStarted,
-      priority: priority.low,
-      createdAt: new Date("8/31/2025").toISOString(),
-      dueDate: new Date("9/1/2025").toISOString(),
-      notes: "",
-    },
-  ],
+  items: [],
   editingCell: null,
   selectedIds: [],
-  filter: "all",
-  sort: null,
-  pagination: { page: 1, pageSize: 10 },
 };
 
 const todoSlice = createSlice({
@@ -91,11 +63,8 @@ const todoSlice = createSlice({
       state.editingCell = null;
     },
 
-    setPage: (state, action: PayloadAction<number>) => {
-      state.pagination.page = action.payload;
-    },
-    setPageSize: (state, action: PayloadAction<number>) => {
-      state.pagination.pageSize = action.payload;
+    replaceState: (state, action: PayloadAction<TodosState>) => {
+      return action.payload;
     },
   },
 });
@@ -109,8 +78,7 @@ export const {
   deleteTodos,
   startEditing,
   stopEditing,
-  setPage,
-  setPageSize,
+  replaceState,
 } = todoSlice.actions;
 
 export default todoSlice.reducer;

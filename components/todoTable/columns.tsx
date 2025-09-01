@@ -274,8 +274,8 @@ export function Columns(): ColumnDef<Todo>[] {
     // Created At column
     {
       accessorKey: "createdAt",
-      size: 100,
-      maxSize: 100,
+      size: 150,
+      maxSize: 150,
       header: ({ column }) => (
         <SortableHeader column={column}>
           <span className="flex gap-1 items-center">
