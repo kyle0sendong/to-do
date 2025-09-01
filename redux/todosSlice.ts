@@ -91,17 +91,6 @@ const todoSlice = createSlice({
       state.editingCell = null;
     },
 
-    setFilter: (state, action: PayloadAction<TodosState["filter"]>) => {
-      state.filter = action.payload;
-    },
-
-    setSort: (
-      state,
-      action: PayloadAction<{ key: keyof Todo; direction: "asc" | "desc" }>
-    ) => {
-      state.sort = action.payload;
-    },
-
     setPage: (state, action: PayloadAction<number>) => {
       state.pagination.page = action.payload;
     },
@@ -120,8 +109,6 @@ export const {
   deleteTodos,
   startEditing,
   stopEditing,
-  setFilter,
-  setSort,
   setPage,
   setPageSize,
 } = todoSlice.actions;

@@ -118,8 +118,10 @@ export function Columns(): ColumnDef<Todo>[] {
     // Status column
     {
       accessorKey: "status",
+      accessorFn: (row: Todo) => row.status?.name, // return the status.name for filtering
       size: 100,
       maxSize: 100,
+      enableColumnFilter: true,
       header: () => (
         <div className="flex gap-1 items-center">
           <ChartNoAxesColumn className="rotate-270" strokeWidth={3.5} />
@@ -157,6 +159,7 @@ export function Columns(): ColumnDef<Todo>[] {
     // Priority column
     {
       accessorKey: "priority",
+      accessorFn: (row: Todo) => row.priority?.name, // return the priority.name for filtering
       size: 100,
       maxSize: 100,
       header: () => (

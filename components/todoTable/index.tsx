@@ -7,6 +7,7 @@ import {
   useReactTable,
   getPaginationRowModel,
   getFilteredRowModel,
+  ColumnFiltersState,
 } from "@tanstack/react-table";
 
 // Icons
@@ -15,7 +16,6 @@ import {
   Plus,
   Search,
   Trash2,
-  Funnel,
   CircleX,
   CircleCheck,
 } from "lucide-react";
@@ -30,6 +30,7 @@ import {
 } from "@/redux/todosSlice";
 
 // Components
+import { status, priority } from "@/lib/constants";
 import { Columns } from "./columns";
 import { Button } from "@/components/shadcn/button";
 import { Input } from "@/components/shadcn/input";
@@ -41,15 +42,26 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/shadcn/table";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+  DropdownMenuSeparator,
+} from "@/components/shadcn/dropdown-menu";
 
 export function TodoTable() {
   const dispatch = useDispatch();
   const todos = useSelector(todoStates);
   const [expandSearchbar, setExpandSearchbar] = useState(false);
-
+  const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
   const table = useReactTable({
     data: todos.items,
     columns: Columns(),
+    state: {
+      columnFilters,
+    },
+    onColumnFiltersChange: setColumnFilters,
     getCoreRowModel: getCoreRowModel(),
     getPaginationRowModel: getPaginationRowModel(),
     getFilteredRowModel: getFilteredRowModel(),
@@ -61,8 +73,8 @@ export function TodoTable() {
 
   const renderEmptyRows = (
     <TableRow>
-      <TableCell colSpan={Columns.length} className="h-24 text-center">
-        No todos found.
+      <TableCell colSpan={Columns.length} className="text-center">
+        No tasks found.
       </TableCell>
     </TableRow>
   );
@@ -83,11 +95,79 @@ export function TodoTable() {
       </div>
 
       {/* Top toolbar */}
-      <div className="flex justify-between mb-3 pb-3 gap-4 border-b border-b-gray-200">
+      <div className="flex justify-between mb-3 pb-2 gap-4 border-b border-b-gray-200">
         <div className="flex">
-          <Button variant="ghost">By Status</Button>
-          <Button variant="ghost">By Priority</Button>
-          
+          <DropdownMenu>
+            <DropdownMenuTrigger>
+              <span className="font-semibold hover:bg-gray-100 py-2 px-3 rounded-md cursor-pointer text-sm">
+                By Status
+                <span className="font-normal">
+                  {table.getColumn("status")?.getFilterValue()
+                    ? `: ${String(table.getColumn("status")?.getFilterValue())}`
+                    : ""}
+                </span>
+              </span>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent className="text-white !p-2">
+              {Object.entries(status).map(([key, { name }]) => (
+                <DropdownMenuItem
+                  key={key}
+                  onClick={() => {
+                    table.getColumn("status")?.setFilterValue(name);
+                  }}
+                >
+                  {name}
+                </DropdownMenuItem>
+              ))}
+
+              <DropdownMenuSeparator />
+              <DropdownMenuItem
+                className="text-xs p-1"
+                onClick={() => {
+                  table.getColumn("status")?.setFilterValue(undefined); // clear filter
+                }}
+              >
+                Clear Filter
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+
+          <DropdownMenu>
+            <DropdownMenuTrigger>
+              <span className="font-semibold hover:bg-gray-100 py-2 px-3 rounded-md cursor-pointer text-sm">
+                By Priority
+                <span className="font-normal">
+                  {table.getColumn("priority")?.getFilterValue()
+                    ? `: ${String(
+                        table.getColumn("priority")?.getFilterValue()
+                      )}`
+                    : ""}
+                </span>
+              </span>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent className="text-white !p-2">
+              {Object.entries(priority).map(([key, { name }]) => (
+                <DropdownMenuItem
+                  key={key}
+                  onClick={() => {
+                    table.getColumn("priority")?.setFilterValue(name);
+                  }}
+                >
+                  {name}
+                </DropdownMenuItem>
+              ))}
+              <DropdownMenuSeparator />
+              <DropdownMenuItem
+                className="text-xs p-1"
+                onClick={() => {
+                  table.getColumn("priority")?.setFilterValue(undefined); // clear filter
+                }}
+              >
+                Clear Filter
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+
           {selectedIds.length > 0 && (
             <>
               <Button
@@ -109,44 +189,46 @@ export function TodoTable() {
           )}
         </div>
 
-        <div className="flex items-center gap-2">
-          <Button variant="ghost" className="!py-0 !px-2">
-            <Funnel />
+        {/* Search bar */}
+        <div className="flex items-center gap-1">
+          {expandSearchbar && (
+            <>
+              <Button
+                variant="ghost"
+                onClick={() => setExpandSearchbar(false)}
+                className="!py-0 !px-2"
+              >
+                <Search />
+              </Button>
+
+              <Input
+                className="!min-w-[12rem]"
+                value={
+                  (table.getColumn("title")?.getFilterValue() as string) ?? ""
+                }
+                onChange={(e) =>
+                  table.getColumn("title")?.setFilterValue(e.target.value)
+                }
+                autoFocus
+                placeholder="Search tasks..."
+              />
+            </>
+          )}
+
+          <Button
+            variant="ghost"
+            onClick={() => {
+              if (expandSearchbar) {
+                table.getColumn("title")?.setFilterValue("");
+                setExpandSearchbar(false);
+              } else {
+                setExpandSearchbar(true);
+              }
+            }}
+            className="!py-0 !px-2"
+          >
+            {expandSearchbar ? <CircleX /> : <Search />}
           </Button>
-
-          <div className="flex items-center gap-1">
-            {expandSearchbar && (
-              <>
-                <Button
-                  variant="ghost"
-                  onClick={() => setExpandSearchbar(false)}
-                  className="!py-0 !px-2"
-                >
-                  <Search />
-                </Button>
-
-                <Input
-                  className="!min-w-[12rem]"
-                  value={
-                    (table.getColumn("title")?.getFilterValue() as string) ?? ""
-                  }
-                  onChange={(e) =>
-                    table.getColumn("title")?.setFilterValue(e.target.value)
-                  }
-                  autoFocus
-                  placeholder="Search tasks..."
-                />
-              </>
-            )}
-
-            <Button
-              variant="ghost"
-              onClick={() => setExpandSearchbar(!expandSearchbar)}
-              className="!py-0 !px-2"
-            >
-              {expandSearchbar ? <CircleX /> : <Search />}
-            </Button>
-          </div>
         </div>
       </div>
 

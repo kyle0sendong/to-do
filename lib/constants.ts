@@ -2,6 +2,7 @@ import type { Status, Priority } from "@/types/todo";
 
 export const status = {
   completed: { name: "Completed", color: "green" },
+  inProgress: { name: "In Progress", color: "orange" },
   notStarted: { name: "Not Started", color: "red" },
 } satisfies Record<string, Status>;
 
