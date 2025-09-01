@@ -23,8 +23,8 @@ const initialState: TodosState = {
       title: "Finish setup",
       status: status.completed,
       priority: priority.high,
-      createdAt: new Date("8/12/2025").toISOString(),
-      dueDate: new Date("8/14/2025").toISOString(),
+      createdAt: new Date("8/31/2025").toISOString(),
+      dueDate: new Date("9/1/2025").toISOString(),
       notes: "Finish the setup immediately",
     },
     {
@@ -32,8 +32,8 @@ const initialState: TodosState = {
       title: "Add persistence",
       status: status.notStarted,
       priority: priority.low,
-      createdAt: new Date("8/12/2025").toISOString(),
-      dueDate: new Date("8/25/2025").toISOString(),
+      createdAt: new Date("8/31/2025").toISOString(),
+      dueDate: new Date("9/1/2025").toISOString(),
       notes: "",
     },
   ],
@@ -71,10 +71,14 @@ const todoSlice = createSlice({
     deleteTodos: (state, action: PayloadAction<string[]>) => {
       state.items = state.items.filter((t) => !action.payload.includes(t.id));
     },
-    // toggleTodo: (state, action: PayloadAction<string>) => {
-    //   const todo = state.items.find((t) => t.id === action.payload);
-    //   if (todo) todo.completed = !todo.completed;
-    // },
+    toggleTodos: (state, action: PayloadAction<string[]>) => {
+      const ids = action.payload;
+      state.items.forEach((t) => {
+        if (ids.includes(t.id)) {
+          t.status = status.completed;
+        }
+      });
+    },
 
     // Inline Editing
     startEditing: (
@@ -112,7 +116,7 @@ export const todoStates = (state: RootState) => state.todos;
 export const {
   addTodo,
   updateTodo,
-  // toggleTodo,
+  toggleTodos,
   deleteTodos,
   startEditing,
   stopEditing,

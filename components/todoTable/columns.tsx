@@ -41,6 +41,7 @@ export function Columns(): ColumnDef<Todo>[] {
   const todos = useSelector(todoStates);
 
   return [
+    // Select column
     {
       id: "select",
       size: 20,
@@ -59,6 +60,8 @@ export function Columns(): ColumnDef<Todo>[] {
       enableSorting: false,
       enableHiding: false,
     },
+
+    // Title column
     {
       accessorKey: "title",
       size: 200,
@@ -111,6 +114,8 @@ export function Columns(): ColumnDef<Todo>[] {
         );
       },
     },
+
+    // Status column
     {
       accessorKey: "status",
       size: 100,
@@ -148,6 +153,8 @@ export function Columns(): ColumnDef<Todo>[] {
         );
       },
     },
+
+    // Priority column
     {
       accessorKey: "priority",
       size: 100,
@@ -186,6 +193,8 @@ export function Columns(): ColumnDef<Todo>[] {
         );
       },
     },
+
+    // Due Date column
     {
       accessorKey: "dueDate",
       size: 100,
@@ -244,6 +253,8 @@ export function Columns(): ColumnDef<Todo>[] {
         );
       },
     },
+
+    // Created At column
     {
       accessorKey: "createdAt",
       size: 100,
@@ -259,6 +270,8 @@ export function Columns(): ColumnDef<Todo>[] {
         return <span>{date}</span>;
       },
     },
+
+    // Notes column
     {
       accessorKey: "notes",
       size: 200,

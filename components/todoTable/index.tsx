@@ -6,15 +6,28 @@ import {
   getCoreRowModel,
   useReactTable,
   getPaginationRowModel,
+  getFilteredRowModel,
 } from "@tanstack/react-table";
-import { cn } from "@/lib/utils";
 
 // Icons
-import { ListCheck, Plus, Search, Trash2, Funnel, X } from "lucide-react";
+import {
+  ListCheck,
+  Plus,
+  Search,
+  Trash2,
+  Funnel,
+  CircleX,
+  CircleCheck,
+} from "lucide-react";
 
 // Redux
 import { useSelector, useDispatch } from "react-redux";
-import { todoStates, addTodo, deleteTodos } from "@/redux/todosSlice";
+import {
+  todoStates,
+  addTodo,
+  deleteTodos,
+  toggleTodos,
+} from "@/redux/todosSlice";
 
 // Components
 import { Columns } from "./columns";
@@ -32,14 +45,19 @@ import {
 export function TodoTable() {
   const dispatch = useDispatch();
   const todos = useSelector(todoStates);
-  const [expand, setExpand] = useState(false);
+  const [expandSearchbar, setExpandSearchbar] = useState(false);
 
   const table = useReactTable({
     data: todos.items,
     columns: Columns(),
     getCoreRowModel: getCoreRowModel(),
     getPaginationRowModel: getPaginationRowModel(),
+    getFilteredRowModel: getFilteredRowModel(),
   });
+
+  const selectedIds = table
+    .getSelectedRowModel()
+    .rows.map((row) => row.original.id);
 
   const renderEmptyRows = (
     <TableRow>
@@ -50,10 +68,11 @@ export function TodoTable() {
   );
 
   const handleDelete = () => {
-    const selectedIds = table
-      .getSelectedRowModel()
-      .rows.map((row) => row.original.id);
     dispatch(deleteTodos(selectedIds));
+  };
+
+  const handleToggleTodos = () => {
+    dispatch(toggleTodos(selectedIds));
   };
 
   return (
@@ -63,13 +82,31 @@ export function TodoTable() {
         <h1 className="text-2xl font-bold">Todo List</h1>
       </div>
 
+      {/* Top toolbar */}
       <div className="flex justify-between mb-3 pb-3 gap-4 border-b border-b-gray-200">
         <div className="flex">
-          <Button variant="ghost">All Tasks</Button>
           <Button variant="ghost">By Status</Button>
-          <Button variant="ghost" onClick={handleDelete}>
-            <Trash2 />
-          </Button>
+          <Button variant="ghost">By Priority</Button>
+          
+          {selectedIds.length > 0 && (
+            <>
+              <Button
+                variant="ghost"
+                className="hover:!text-red-500"
+                onClick={handleDelete}
+              >
+                <Trash2 />
+              </Button>
+
+              <Button
+                variant="ghost"
+                className="hover:!text-green-500"
+                onClick={handleToggleTodos}
+              >
+                <CircleCheck />
+              </Button>
+            </>
+          )}
         </div>
 
         <div className="flex items-center gap-2">
@@ -78,31 +115,42 @@ export function TodoTable() {
           </Button>
 
           <div className="flex items-center gap-1">
-            {expand && (
+            {expandSearchbar && (
               <>
                 <Button
                   variant="ghost"
-                  onClick={() => setExpand(false)}
+                  onClick={() => setExpandSearchbar(false)}
                   className="!py-0 !px-2"
                 >
                   <Search />
                 </Button>
 
-                <Input className="!min-w-[12rem]" autoFocus />
+                <Input
+                  className="!min-w-[12rem]"
+                  value={
+                    (table.getColumn("title")?.getFilterValue() as string) ?? ""
+                  }
+                  onChange={(e) =>
+                    table.getColumn("title")?.setFilterValue(e.target.value)
+                  }
+                  autoFocus
+                  placeholder="Search tasks..."
+                />
               </>
             )}
 
             <Button
               variant="ghost"
-              onClick={() => setExpand(!expand)}
+              onClick={() => setExpandSearchbar(!expandSearchbar)}
               className="!py-0 !px-2"
             >
-              {expand ? <X /> : <Search />}
+              {expandSearchbar ? <CircleX /> : <Search />}
             </Button>
           </div>
         </div>
       </div>
 
+      {/* Table */}
       <div>
         <Table className="mb-2 border-b border-b-gray-200">
           <TableHeader>
