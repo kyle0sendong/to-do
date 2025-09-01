@@ -5,9 +5,11 @@ import {
   flexRender,
   getCoreRowModel,
   useReactTable,
+  getSortedRowModel,
   getPaginationRowModel,
   getFilteredRowModel,
   ColumnFiltersState,
+  SortingState,
 } from "@tanstack/react-table";
 
 // Icons
@@ -55,16 +57,21 @@ export function TodoTable() {
   const todos = useSelector(todoStates);
   const [expandSearchbar, setExpandSearchbar] = useState(false);
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
+  const [sorting, setSorting] = useState<SortingState>([]);
+
   const table = useReactTable({
     data: todos.items,
     columns: Columns(),
     state: {
       columnFilters,
+      sorting,
     },
+    onSortingChange: setSorting,
     onColumnFiltersChange: setColumnFilters,
     getCoreRowModel: getCoreRowModel(),
     getPaginationRowModel: getPaginationRowModel(),
     getFilteredRowModel: getFilteredRowModel(),
+    getSortedRowModel: getSortedRowModel(),
   });
 
   const selectedIds = table

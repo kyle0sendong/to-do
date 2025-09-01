@@ -27,6 +27,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/shadcn/dropdown-menu";
+import { SortableHeader } from "./SortableHeader";
 import {
   status as statusItems,
   priority as priorityItems,
@@ -65,12 +66,15 @@ export function Columns(): ColumnDef<Todo>[] {
     {
       accessorKey: "title",
       size: 200,
-      header: () => (
-        <span className="flex gap-1 w-fit items-center">
-          <CaseSensitive size={24} strokeWidth={2.5} />
-          Task
-        </span>
+      header: ({ column }) => (
+        <SortableHeader column={column}>
+          <span className="flex gap-1 items-center">
+            <CaseSensitive className="!h-5 !w-5" strokeWidth={2.5} />
+            Task
+          </span>
+        </SortableHeader>
       ),
+
       cell: ({ row, column }) => {
         const isEditing =
           todos.editingCell?.rowId === row.original.id &&
@@ -122,12 +126,18 @@ export function Columns(): ColumnDef<Todo>[] {
       size: 100,
       maxSize: 100,
       enableColumnFilter: true,
-      header: () => (
-        <div className="flex gap-1 items-center">
-          <ChartNoAxesColumn className="rotate-270" strokeWidth={3.5} />
-          Status
-        </div>
+      header: ({ column }) => (
+        <SortableHeader column={column}>
+          <span className="flex gap-1 items-center">
+            <ChartNoAxesColumn
+              className="rotate-270 !h-5 !w-5"
+              strokeWidth={3.5}
+            />
+            Status
+          </span>
+        </SortableHeader>
       ),
+
       cell: ({ row }) => {
         const status = row.original.status;
 
@@ -162,11 +172,13 @@ export function Columns(): ColumnDef<Todo>[] {
       accessorFn: (row: Todo) => row.priority?.name, // return the priority.name for filtering
       size: 100,
       maxSize: 100,
-      header: () => (
-        <div className="flex gap-1 items-center">
-          <ChevronsUp size={24} strokeWidth={3} />
-          Priority
-        </div>
+      header: ({ column }) => (
+        <SortableHeader column={column}>
+          <span className="flex items-center">
+            <ChevronsUp className="!h-5 !w-5" strokeWidth={3} />
+            Priority
+          </span>
+        </SortableHeader>
       ),
       cell: ({ row }) => {
         const priority = row.original.priority;
@@ -202,11 +214,13 @@ export function Columns(): ColumnDef<Todo>[] {
       accessorKey: "dueDate",
       size: 100,
       maxSize: 100,
-      header: () => (
-        <div className="flex gap-1 items-center">
-          <CalendarIcon size={20} strokeWidth={3} />
-          Due Date
-        </div>
+      header: ({ column }) => (
+        <SortableHeader column={column}>
+          <span className="flex gap-1 items-center">
+            <CalendarIcon className="!h-5 !w-5" strokeWidth={3} />
+            Due Date
+          </span>
+        </SortableHeader>
       ),
       cell: ({ row, column }) => {
         const isEditing =
@@ -262,11 +276,13 @@ export function Columns(): ColumnDef<Todo>[] {
       accessorKey: "createdAt",
       size: 100,
       maxSize: 100,
-      header: () => (
-        <div className="flex gap-1 items-center">
-          <CalendarIcon size={20} strokeWidth={3} />
-          Creation Date
-        </div>
+      header: ({ column }) => (
+        <SortableHeader column={column}>
+          <span className="flex gap-1 items-center">
+            <CalendarIcon className="!h-5 !w-5" strokeWidth={3} />
+            Creation Date
+          </span>
+        </SortableHeader>
       ),
       cell: ({ row }) => {
         const date = new Date(row.getValue("createdAt")).toLocaleDateString();
