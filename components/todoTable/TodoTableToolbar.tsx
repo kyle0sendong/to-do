@@ -15,24 +15,32 @@ interface TodoTableToolbarProps {
   onToggle: () => void;
 }
 
-export function TodoTableToolbar({ table, selectedIds, onDelete, onToggle }: TodoTableToolbarProps) {
+export function TodoTableToolbar({
+  table,
+  selectedIds,
+  onDelete,
+  onToggle,
+}: TodoTableToolbarProps) {
   return (
     <div className="flex justify-between mb-3 pb-2 gap-4 border-b border-b-gray-200">
       <div className="flex">
         <span
           className="font-semibold hover:bg-gray-100 py-2 px-3 rounded-md cursor-pointer text-sm"
-          onClick={() => table.getColumn("status")?.setFilterValue(undefined)}
+          onClick={() => {
+            table.getColumn("status")?.setFilterValue(undefined);
+            table.getColumn("priority")?.setFilterValue(undefined);
+          }}
         >
           All Tasks ({table.getCoreRowModel().rows.length})
         </span>
-        
+
         <FilterDropdown
           table={table}
           columnId="status"
           title="By Status"
           options={status}
         />
-        
+
         <FilterDropdown
           table={table}
           columnId="priority"

@@ -70,6 +70,7 @@ export function TodoTable() {
 
   const handleToggleTodos = () => {
     dispatch(toggleTodos(selectedIds));
+    table.resetRowSelection();
   };
 
   const handleAddItem = () => {
