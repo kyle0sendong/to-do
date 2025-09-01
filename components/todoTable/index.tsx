@@ -34,6 +34,8 @@ import {
 // Components
 import { status, priority } from "@/lib/constants";
 import { Columns } from "./columns";
+import { TablePagination } from "./Pagination";
+
 import { Button } from "@/components/shadcn/button";
 import { Input } from "@/components/shadcn/input";
 import {
@@ -51,13 +53,26 @@ import {
   DropdownMenuTrigger,
   DropdownMenuSeparator,
 } from "@/components/shadcn/dropdown-menu";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/shadcn/select";
 
 export function TodoTable() {
   const dispatch = useDispatch();
   const todos = useSelector(todoStates);
   const [expandSearchbar, setExpandSearchbar] = useState(false);
+
+  // Table setup
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
   const [sorting, setSorting] = useState<SortingState>([]);
+  const [pagination, setPagination] = useState({
+    pageIndex: 0,
+    pageSize: 10,
+  });
 
   const table = useReactTable({
     data: todos.items,
@@ -65,7 +80,9 @@ export function TodoTable() {
     state: {
       columnFilters,
       sorting,
+      pagination,
     },
+    onPaginationChange: setPagination,
     onSortingChange: setSorting,
     onColumnFiltersChange: setColumnFilters,
     getCoreRowModel: getCoreRowModel(),
@@ -74,6 +91,7 @@ export function TodoTable() {
     getSortedRowModel: getSortedRowModel(),
   });
 
+  // Helper functions
   const selectedIds = table
     .getSelectedRowModel()
     .rows.map((row) => row.original.id);
@@ -86,6 +104,7 @@ export function TodoTable() {
     </TableRow>
   );
 
+  // Event Handlers
   const handleDelete = () => {
     dispatch(deleteTodos(selectedIds));
   };
@@ -303,22 +322,8 @@ export function TodoTable() {
       </div>
 
       {/* Pagination */}
-      <div className="flex items-center justify-end space-x-2 py-4">
-        <Button
-          className="px-3 py-1 border rounded disabled:opacity-50"
-          onClick={() => table.previousPage()}
-          disabled={!table.getCanPreviousPage()}
-        >
-          Previous
-        </Button>
-        <Button
-          className="px-3 py-1 border rounded disabled:opacity-50"
-          onClick={() => table.nextPage()}
-          disabled={!table.getCanNextPage()}
-        >
-          Next
-        </Button>
-      </div>
+      <TablePagination table={table}/>
+
     </div>
   );
 }
