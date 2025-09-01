@@ -69,7 +69,6 @@ const todoSlice = createSlice({
       state.items = state.items.filter((t) => t.id !== action.payload);
     },
 
-    // Inline Editing
     startEditing: (
       state,
       action: PayloadAction<{ rowId: string; columnId: string }>
@@ -79,12 +78,39 @@ const todoSlice = createSlice({
     stopEditing: (state) => {
       state.editingCell = null;
     },
+
+    setFilter: (state, action: PayloadAction<TodosState["filter"]>) => {
+      state.filter = action.payload;
+    },
+
+    setSort: (
+      state,
+      action: PayloadAction<{ key: keyof Todo; direction: "asc" | "desc" }>
+    ) => {
+      state.sort = action.payload;
+    },
+
+    setPage: (state, action: PayloadAction<number>) => {
+      state.pagination.page = action.payload;
+    },
+    setPageSize: (state, action: PayloadAction<number>) => {
+      state.pagination.pageSize = action.payload;
+    },
   },
 });
 
 export const todoStates = (state: RootState) => state.todos;
 
-export const { addTodo, updateTodo, deleteTodo, startEditing, stopEditing } =
-  todoSlice.actions;
+export const {
+  addTodo,
+  updateTodo,
+  deleteTodo,
+  startEditing,
+  stopEditing,
+  setFilter,
+  setSort,
+  setPage,
+  setPageSize,
+} = todoSlice.actions;
 
 export default todoSlice.reducer;

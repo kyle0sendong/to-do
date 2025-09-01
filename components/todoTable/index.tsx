@@ -7,9 +7,10 @@ import {
   useReactTable,
   getPaginationRowModel,
 } from "@tanstack/react-table";
+import { cn } from "@/lib/utils";
 
 // Icons
-import { ListCheck, Plus } from "lucide-react";
+import { ListCheck, Plus, Search, Trash2, Funnel, X } from "lucide-react";
 
 // Redux
 import { useSelector, useDispatch } from "react-redux";
@@ -18,7 +19,7 @@ import { todoStates, addTodo } from "@/redux/todosSlice";
 // Components
 import { Columns } from "./columns";
 import { Button } from "@/components/shadcn/button";
-
+import { Input } from "@/components/shadcn/input";
 import {
   Table,
   TableBody,
@@ -31,7 +32,8 @@ import {
 export function TodoTable() {
   const dispatch = useDispatch();
   const todos = useSelector(todoStates);
-  
+  const [expand, setExpand] = useState(false);
+
   const table = useReactTable({
     data: todos.items,
     columns: Columns(),
@@ -54,9 +56,44 @@ export function TodoTable() {
         <h1 className="text-2xl font-bold">Todo List</h1>
       </div>
 
-      <div className="flex mb-3 pb-3 gap-4 border-b border-b-gray-200">
-        <Button>All Tasks</Button>
-        <Button>By Status</Button>
+      <div className="flex justify-between mb-3 pb-3 gap-4 border-b border-b-gray-200">
+        <div className="flex">
+          <Button variant="ghost">All Tasks</Button>
+          <Button variant="ghost">By Status</Button>
+          <Button variant="ghost">
+            <Trash2 />
+          </Button>
+        </div>
+
+        <div className="flex items-center gap-2">
+          <Button variant="ghost" className="!py-0 !px-2">
+            <Funnel />
+          </Button>
+
+          <div className="flex items-center gap-1">
+            {expand && (
+              <>
+                <Button
+                  variant="ghost"
+                  onClick={() => setExpand(false)}
+                  className="!py-0 !px-2"
+                >
+                  <Search />
+                </Button>
+
+                <Input className="!min-w-[12rem]" autoFocus />
+              </>
+            )}
+
+            <Button
+              variant="ghost"
+              onClick={() => setExpand(!expand)}
+              className="!py-0 !px-2"
+            >
+              {expand ? <X /> : <Search />}
+            </Button>
+          </div>
+        </div>
       </div>
 
       <div>
@@ -65,7 +102,14 @@ export function TodoTable() {
             {table.getHeaderGroups().map((headerGroup) => (
               <TableRow key={headerGroup.id}>
                 {headerGroup.headers.map((header) => (
-                  <TableHead key={header.id}>
+                  <TableHead
+                    key={header.id}
+                    style={{
+                      width: header.getSize(),
+                      minWidth: header.column.columnDef.minSize,
+                      maxWidth: header.column.columnDef.maxSize,
+                    }}
+                  >
                     {header.isPlaceholder
                       ? null
                       : flexRender(
@@ -83,11 +127,13 @@ export function TodoTable() {
               ? table.getRowModel().rows.map((row) => (
                   <TableRow
                     key={row.id}
-                    className="border-b"
                     data-state={row.getIsSelected() && "selected"}
                   >
                     {row.getVisibleCells().map((cell) => (
-                      <TableCell key={cell.id}>
+                      <TableCell
+                        key={cell.id}
+                        className="py-1.5 border-b border-r"
+                      >
                         {flexRender(
                           cell.column.columnDef.cell,
                           cell.getContext()

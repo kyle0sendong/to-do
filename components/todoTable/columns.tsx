@@ -1,12 +1,11 @@
-import { useState } from "react";
 import { ColumnDef } from "@tanstack/react-table";
-
+import { useState } from "react";
 import { cn } from "@/lib/utils";
 import {
   CaseSensitive,
   ChartNoAxesColumn,
   ChevronsUp,
-  Calendar,
+  Calendar as CalendarIcon,
   Music2,
 } from "lucide-react";
 
@@ -16,9 +15,21 @@ import { startEditing, stopEditing, todoStates } from "@/redux/todosSlice";
 
 // Components
 import { Checkbox } from "@/components/shadcn/checkbox";
-import { Button } from "../shadcn/button";
+import { Calendar } from "@/components/shadcn/calendar";
+import { Textarea } from "@/components/shadcn/textarea";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/shadcn/dropdown-menu";
+import {
+  status as statusItems,
+  priority as priorityItems,
+} from "@/lib/constants";
 
 // Types
+
 import { Todo } from "@/types/todo";
 
 export function Columns(): ColumnDef<Todo>[] {
@@ -28,6 +39,7 @@ export function Columns(): ColumnDef<Todo>[] {
   return [
     {
       id: "select",
+      size: 20,
       header: ({ table }) => (
         <Checkbox
           checked={table.getIsAllPageRowsSelected()}
@@ -47,11 +59,12 @@ export function Columns(): ColumnDef<Todo>[] {
     },
     {
       accessorKey: "title",
+      size: 200,
       header: () => (
-        <div className="flex gap-1 items-center">
+        <span className="flex gap-1 w-fit items-center">
           <CaseSensitive size={24} strokeWidth={2.5} />
           Task
-        </div>
+        </span>
       ),
       cell: ({ row, column }) => {
         const isEditing =
@@ -61,19 +74,20 @@ export function Columns(): ColumnDef<Todo>[] {
         if (isEditing) {
           return (
             <input
-              className="border px-2 py-1"
+              className="w-full"
               defaultValue={row.original.title}
               onBlur={(e) => {
                 dispatch(stopEditing());
               }}
               autoFocus
-            />
+            ></input>
           );
         }
+
         return (
-          <span
+          <div
             className={cn(
-              "flex gap-2",
+              "w-full",
               row.original.status.name === "Completed"
                 ? "line-through text-muted-foreground"
                 : ""
@@ -85,12 +99,13 @@ export function Columns(): ColumnDef<Todo>[] {
             }}
           >
             {row.getValue("title")}
-          </span>
+          </div>
         );
       },
     },
     {
       accessorKey: "status",
+      size: 100,
       header: () => (
         <div className="flex gap-1 items-center">
           <ChartNoAxesColumn className="rotate-270" strokeWidth={3.5} />
@@ -99,7 +114,17 @@ export function Columns(): ColumnDef<Todo>[] {
       ),
       cell: ({ row }) => {
         const status = row.original.status;
-        return <span>{status.name}</span>;
+
+        return (
+          <DropdownMenu>
+            <DropdownMenuTrigger>{status.name}</DropdownMenuTrigger>
+            <DropdownMenuContent className="text-white !p-2">
+              {Object.values(statusItems).map((s) => (
+                <DropdownMenuItem key={s.name}>{s.name}</DropdownMenuItem>
+              ))}
+            </DropdownMenuContent>
+          </DropdownMenu>
+        );
       },
     },
     {
@@ -112,30 +137,75 @@ export function Columns(): ColumnDef<Todo>[] {
       ),
       cell: ({ row }) => {
         const priority = row.original.priority;
-        return <span>{priority?.name}</span>;
+        return (
+          <DropdownMenu>
+            <DropdownMenuTrigger className="w-full h-full text-left">
+              {priority?.name ?? "\u00A0"}
+            </DropdownMenuTrigger>
+            <DropdownMenuContent className="text-white !p-2">
+              {Object.values(priorityItems).map((s) => (
+                <DropdownMenuItem key={s.name}>{s.name}</DropdownMenuItem>
+              ))}
+            </DropdownMenuContent>
+          </DropdownMenu>
+        );
       },
     },
     {
       accessorKey: "dueDate",
       header: () => (
         <div className="flex gap-1 items-center">
-          <Calendar size={20} strokeWidth={3} />
+          <CalendarIcon size={20} strokeWidth={3} />
           Due Date
         </div>
       ),
-      cell: ({ row }) => {
+      cell: ({ row, column }) => {
+        const isEditing =
+          todos.editingCell?.rowId === row.original.id &&
+          todos.editingCell?.columnId === column.id;
+
         const rowValue = row.getValue("dueDate");
         const date = rowValue
           ? new Date(row.getValue("dueDate")).toLocaleDateString()
-          : "";
-        return <span>{date}</span>;
+          : "\u00A0";
+
+        return (
+          <DropdownMenu
+            open={isEditing}
+            onOpenChange={(open) => {
+              if (open) {
+                dispatch(
+                  startEditing({ rowId: row.original.id, columnId: column.id })
+                );
+              } else {
+                dispatch(stopEditing());
+              }
+            }}
+          >
+            <DropdownMenuTrigger className="w-full h-full text-left">
+              {date}
+            </DropdownMenuTrigger>
+            <DropdownMenuContent className="p-0 m-0 border-0 rounded-lg bg-white">
+              <Calendar
+                className="rounded-lg border"
+                mode="single"
+                selected={new Date(row.getValue("dueDate"))}
+                onSelect={(item) => {
+                  if (item) {
+                    dispatch(stopEditing());
+                  }
+                }}
+              />
+            </DropdownMenuContent>
+          </DropdownMenu>
+        );
       },
     },
     {
       accessorKey: "createdAt",
       header: () => (
         <div className="flex gap-1 items-center">
-          <Calendar size={20} strokeWidth={3} />
+          <CalendarIcon size={20} strokeWidth={3} />
           Creation Date
         </div>
       ),
@@ -152,8 +222,38 @@ export function Columns(): ColumnDef<Todo>[] {
           Notes
         </div>
       ),
-      cell: ({ row }) => {
-        return <span>{row.getValue("notes")}</span>;
+      cell: ({ row, column }) => {
+        const isEditing =
+          todos.editingCell?.rowId === row.original.id &&
+          todos.editingCell?.columnId === column.id;
+
+        return (
+          <DropdownMenu
+            open={isEditing}
+            onOpenChange={(open) => {
+              if (open) {
+                dispatch(
+                  startEditing({ rowId: row.original.id, columnId: column.id })
+                );
+              } else {
+                dispatch(stopEditing());
+              }
+            }}
+          >
+            <DropdownMenuTrigger className="w-full h-full text-left border m-0 p-0">
+              {row.getValue("notes") || "\u00A0"}
+            </DropdownMenuTrigger>
+            <DropdownMenuContent className="p-0 m-0 border-0 bg-white">
+              <Textarea
+                className="rounded-lg border min-w-[200px]"
+                placeholder="Enter your notes here"
+                onBlur={() => {
+                  dispatch(stopEditing());
+                }}
+              />
+            </DropdownMenuContent>
+          </DropdownMenu>
+        );
       },
     },
   ];
