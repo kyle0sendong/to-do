@@ -4,6 +4,8 @@ import todosReducer from "./todosSlice";
 
 function saveState(state: RootState) {
   try {
+    const { deleteHistory, redoHistory, ...rest } = state.todos; // Save the deleteHistory in state.todos stored in local storage
+
     localStorage.setItem("todosState", JSON.stringify(state.todos));
   } catch {
     // ignore write errors

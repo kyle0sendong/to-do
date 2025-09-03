@@ -1,19 +1,23 @@
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 import { createId } from "@paralleldrive/cuid2";
 import type { RootState } from "./store";
-import { status, priority } from "@/lib/constants";
+import { status } from "@/lib/constants";
 import { Todo } from "@/types/todo";
 
 interface TodosState {
   items: Todo[];
   editingCell: { rowId: string; columnId: string } | null;
   selectedIds: string[];
+  deleteHistory: Todo[][];
+  redoHistory: Todo[][];
 }
 
 const initialState: TodosState = {
   items: [],
   editingCell: null,
   selectedIds: [],
+  deleteHistory: [],
+  redoHistory: [],
 };
 
 const todoSlice = createSlice({
@@ -41,7 +45,21 @@ const todoSlice = createSlice({
       if (todo) Object.assign(todo, action.payload.changes);
     },
     deleteTodos: (state, action: PayloadAction<string[]>) => {
-      state.items = state.items.filter((t) => !action.payload.includes(t.id));
+      const removedTodos: Todo[] = [];
+      const ids = action.payload;
+
+      state.items = state.items.filter((todo) => {
+        if (ids.includes(todo.id)) {
+          removedTodos.push(todo);
+          return false;
+        }
+        return true;
+      });
+
+      if (removedTodos.length > 0) {
+        state.deleteHistory.push(removedTodos);
+        state.redoHistory = []; // clear redo when new delete happens
+      }
     },
     toggleTodos: (state, action: PayloadAction<string[]>) => {
       const ids = action.payload;
@@ -64,7 +82,29 @@ const todoSlice = createSlice({
     },
 
     replaceState: (state, action: PayloadAction<TodosState>) => {
-      return action.payload;
+      return {
+        ...action.payload,
+        deleteHistory: action.payload.deleteHistory ?? [],
+      };
+    },
+
+    // Undo/Redo
+    undoDelete: (state) => {
+      const lastDeleted = state.deleteHistory.pop();
+      if (lastDeleted) {
+        state.items.push(...lastDeleted); // Restore deleted item/s
+        state.redoHistory.push(lastDeleted); // Add the item/s to redo history
+      }
+    },
+    redoDelete: (state) => {
+      const lastRedo = state.redoHistory.pop();
+      if (lastRedo) {
+        state.items = state.items.filter(
+          // Remove todos in redoHistory that is already restored
+          (todo) => !lastRedo.some((rt) => rt.id === todo.id)
+        );
+        state.deleteHistory.push(lastRedo); // Put back into delete history
+      }
     },
   },
 });
@@ -79,6 +119,8 @@ export const {
   startEditing,
   stopEditing,
   replaceState,
+  undoDelete,
+  redoDelete,
 } = todoSlice.actions;
 
 export default todoSlice.reducer;
