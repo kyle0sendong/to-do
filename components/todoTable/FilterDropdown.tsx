@@ -1,6 +1,9 @@
 "use client";
 
 import { Table as TableType } from "@tanstack/react-table";
+
+import { useState } from "react";
+
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -8,6 +11,7 @@ import {
   DropdownMenuTrigger,
   DropdownMenuSeparator,
 } from "@/components/shadcn/dropdown-menu";
+import { Calendar } from "../shadcn/calendar";
 import { Todo } from "@/types/todo";
 
 interface FilterDropdownProps {
@@ -23,8 +27,41 @@ export function FilterDropdown({
   title,
   options,
 }: FilterDropdownProps) {
+  const [date, setDate] = useState<Date | undefined>(new Date());
   const column = table.getColumn(columnId);
   const filterValue = column?.getFilterValue();
+
+  // Convert to MM/dd/YYYY
+  let renderFilterValue: string | undefined;
+  if (title === "By Duedate" && filterValue) {
+    const date = new Date(filterValue as string);
+    renderFilterValue = date.toLocaleDateString("en-US");
+  } else {
+    renderFilterValue = filterValue as string;
+  }
+
+  const renderDropdownItem = () => {
+    return title === "By Duedate" ? (
+      <Calendar
+        className="rounded-lg border text-black"
+        mode="single"
+        selected={date}
+        onSelect={(e) => {
+          setDate(e);
+          column?.setFilterValue(e?.toISOString());
+        }}
+      />
+    ) : (
+      Object.entries(options).map(([key, { name }]) => (
+        <DropdownMenuItem
+          key={key}
+          onClick={() => column?.setFilterValue(name)}
+        >
+          {name}
+        </DropdownMenuItem>
+      ))
+    );
+  };
 
   return (
     <DropdownMenu>
@@ -33,7 +70,7 @@ export function FilterDropdown({
           {title}
           <span className="font-normal">
             {filterValue
-              ? `: ${String(filterValue)} (${
+              ? `: ${renderFilterValue} (${
                   table.getFilteredRowModel().rows.length
                 })`
               : ""}
@@ -41,14 +78,7 @@ export function FilterDropdown({
         </span>
       </DropdownMenuTrigger>
       <DropdownMenuContent className="text-white !p-2">
-        {Object.entries(options).map(([key, { name }]) => (
-          <DropdownMenuItem
-            key={key}
-            onClick={() => column?.setFilterValue(name)}
-          >
-            {name}
-          </DropdownMenuItem>
-        ))}
+        {renderDropdownItem()}
         <DropdownMenuSeparator />
         <DropdownMenuItem
           className="text-xs p-1"

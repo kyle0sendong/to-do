@@ -212,6 +212,7 @@ export function Columns(): ColumnDef<Todo>[] {
     // Due Date column
     {
       accessorKey: "dueDate",
+      accessorFn: (row: Todo) => row.dueDate,
       size: 100,
       maxSize: 100,
       header: ({ column }) => (
@@ -258,7 +259,7 @@ export function Columns(): ColumnDef<Todo>[] {
                     dispatch(
                       updateTodo({
                         id: row.original.id,
-                        changes: { dueDate: item.toLocaleDateString() },
+                        changes: { dueDate: item.toISOString() },
                       })
                     );
                     dispatch(stopEditing());
